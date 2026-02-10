@@ -174,7 +174,19 @@ const CAL = {
     this.setOwnerToggle(entry.owner);
     document.getElementById('noteInput').value = entry.note || '';
     document.getElementById('photoInput').value = '';
-    document.getElementById('deleteBtn').style.display = selected[key] ? 'block' : 'none';
+    document.getElementById('photoPreview').style.display = 'none';
+    document.querySelector('.photo-upload-icon').style.display = 'block';
+    document.querySelector('.photo-upload-text').innerHTML = 'Tap to <strong>add a photo</strong>';
+    
+    // Show existing photo if any
+    if (entry.photo) {
+      document.getElementById('previewImg').src = entry.photo;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.querySelector('.photo-upload-icon').style.display = 'none';
+      document.querySelector('.photo-upload-text').textContent = 'Tap to change';
+    }
+    
+    document.getElementById('deleteBtn').style.display = selected[key] ? 'flex' : 'none';
 
     document.getElementById('editOverlay').classList.add('show');
     setTimeout(() => document.getElementById('editModal').classList.add('show'), 10);
@@ -186,13 +198,28 @@ const CAL = {
   },
 
   setOwnerToggle(owner) {
-    document.getElementById('optRP').className = 'owner-opt' + (owner === 'rp' ? ' active-rp' : '');
-    document.getElementById('optVR').className = 'owner-opt' + (owner === 'vr' ? ' active-vr' : '');
+    document.getElementById('optRP').className = 'owner-card' + (owner === 'rp' ? ' active-rp' : '');
+    document.getElementById('optVR').className = 'owner-card' + (owner === 'vr' ? ' active-vr' : '');
   },
 
   bindEditor() {
     document.getElementById('optRP').onclick = () => this.setOwnerToggle('rp');
     document.getElementById('optVR').onclick = () => this.setOwnerToggle('vr');
+
+    // Photo preview
+    document.getElementById('photoInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          document.getElementById('previewImg').src = reader.result;
+          document.getElementById('photoPreview').style.display = 'block';
+          document.querySelector('.photo-upload-icon').style.display = 'none';
+          document.querySelector('.photo-upload-text').textContent = 'Tap to change';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
     document.getElementById('saveBtn').onclick = () => {
       const owner = document.getElementById('optRP').classList.contains('active-rp') ? 'rp' : 'vr';
@@ -244,6 +271,7 @@ const CAL = {
     };
 
     document.getElementById('cancelBtn').onclick = () => this.closeEditor();
+    document.getElementById('cancelBtn2').onclick = () => this.closeEditor();
     document.getElementById('editOverlay').onclick = () => this.closeEditor();
   },
 

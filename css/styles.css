@@ -203,36 +203,44 @@ body {
 
 /* Stats Bar */
 .stats-bar {
-  display: flex; gap: 10px;
-  padding: 0 16px;
-  margin-bottom: 20px;
+  display: flex; align-items: center; justify-content: center; gap: 24px;
+  padding: 0 20px;
+  margin-bottom: 22px;
 }
-.stat-card {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--surface2);
-  border-radius: var(--radius);
-  padding: 14px;
-  text-align: center;
-  transition: all 0.2s;
+.stat-pill {
+  display: flex; align-items: center; gap: 10px;
 }
-.stat-card.rp { border-color: rgba(78,168,222,0.3); }
-.stat-card.vr { border-color: rgba(199,125,255,0.3); }
-.stat-label {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: 0.75rem; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 1.5px;
-  margin-bottom: 6px;
+.stat-paw {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
 }
-.stat-label.rp { color: var(--rp-color); }
-.stat-label.vr { color: var(--vr-color); }
-.stat-label img { width: 14px; height: 14px; }
-.stat-num {
-  font-size: 2rem; font-weight: 700;
+.stat-paw.rp { background: var(--rp-glow); }
+.stat-paw.vr { background: var(--vr-glow); }
+.stat-paw img { width: 18px; height: 18px; }
+.stat-info { display: flex; flex-direction: column; }
+.stat-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
   line-height: 1;
 }
-.stat-card.rp .stat-num { color: var(--rp-color); }
-.stat-card.vr .stat-num { color: var(--vr-color); }
+.stat-name.rp { color: var(--rp-color); }
+.stat-name.vr { color: var(--vr-color); }
+.stat-num {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.stat-pill.rp .stat-num { color: var(--text); }
+.stat-pill.vr .stat-num { color: var(--text); }
+.stat-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--surface2);
+}
 
 /* Month Navigation */
 .month-nav {
@@ -392,7 +400,7 @@ body {
   z-index: 501;
   transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
-  max-height: 80dvh;
+  max-height: 85dvh;
   overflow-y: auto;
 }
 .modal.show { transform: translateY(0); }
@@ -407,6 +415,195 @@ body {
   font-weight: 600;
   margin-bottom: 16px;
 }
+
+/* ── Edit Modal Specifics ── */
+.edit-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.edit-date {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.edit-close {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: var(--bg);
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+
+/* Owner Selector */
+.edit-section-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.owner-selector {
+  display: flex; gap: 10px;
+  margin-bottom: 20px;
+}
+.owner-card {
+  flex: 1;
+  padding: 14px 12px;
+  border-radius: 12px;
+  border: 2px solid var(--surface2);
+  background: var(--bg);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.owner-card:active { transform: scale(0.96); }
+.owner-card .oc-paw {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.owner-card .oc-paw img { width: 20px; height: 20px; }
+.owner-card .oc-paw.rp { background: rgba(78,168,222,0.1); }
+.owner-card .oc-paw.vr { background: rgba(199,125,255,0.1); }
+.owner-card .oc-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  transition: color 0.2s;
+}
+.owner-card .oc-check {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--surface2);
+  transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem;
+  color: transparent;
+}
+/* Active states */
+.owner-card.active-rp {
+  border-color: var(--rp-color);
+  background: rgba(78,168,222,0.06);
+}
+.owner-card.active-rp .oc-paw.rp { background: var(--rp-glow); }
+.owner-card.active-rp .oc-name { color: var(--rp-color); }
+.owner-card.active-rp .oc-check {
+  border-color: var(--rp-color);
+  background: var(--rp-color);
+  color: #fff;
+}
+.owner-card.active-vr {
+  border-color: var(--vr-color);
+  background: rgba(199,125,255,0.06);
+}
+.owner-card.active-vr .oc-paw.vr { background: var(--vr-glow); }
+.owner-card.active-vr .oc-name { color: var(--vr-color); }
+.owner-card.active-vr .oc-check {
+  border-color: var(--vr-color);
+  background: var(--vr-color);
+  color: #fff;
+}
+
+/* Note Input */
+.edit-note {
+  width: 100%;
+  height: 80px;
+  background: var(--bg);
+  border: 1.5px solid var(--surface2);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  padding: 14px;
+  resize: none;
+  margin-bottom: 20px;
+  transition: border-color 0.2s;
+}
+.edit-note:focus { outline: none; border-color: var(--text-dim); }
+.edit-note::placeholder { color: rgba(136,136,168,0.5); }
+
+/* Photo Upload Area */
+.photo-upload-area {
+  border: 1.5px dashed var(--surface2);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.photo-upload-area:active { border-color: var(--text-dim); background: rgba(255,255,255,0.02); }
+.photo-upload-area input[type="file"] {
+  position: absolute; inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.photo-upload-icon {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+.photo-upload-text {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.photo-upload-text strong {
+  color: var(--rp-color);
+}
+.photo-preview {
+  display: none;
+  margin-top: 10px;
+}
+.photo-preview img {
+  width: 60px; height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid var(--surface2);
+}
+
+/* Action Buttons */
+.edit-actions {
+  display: flex; gap: 10px;
+}
+.edit-actions button {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.edit-actions button:active { transform: scale(0.96); }
+.btn-delete {
+  background: rgba(239,68,68,0.1);
+  color: #ef4444;
+  flex: 0 0 auto !important;
+  width: 48px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  padding: 14px 0 !important;
+}
+.btn-cancel {
+  background: var(--bg);
+  color: var(--text-dim);
+}
+.btn-save {
+  background: linear-gradient(135deg, var(--rp-color), var(--vr-color));
+  color: #fff;
+}
+
+/* Generic modal labels (year summary etc) */
 .modal label {
   display: block;
   font-size: 0.8rem;
@@ -418,56 +615,6 @@ body {
   margin-top: 14px;
 }
 .modal label:first-of-type { margin-top: 0; }
-
-.owner-toggle {
-  display: flex; gap: 8px;
-}
-.owner-opt {
-  flex: 1;
-  padding: 10px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--surface2);
-  background: transparent;
-  color: var(--text-dim);
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-}
-.owner-opt.active-rp {
-  border-color: var(--rp-color);
-  background: var(--rp-glow);
-  color: var(--rp-color);
-}
-.owner-opt.active-vr {
-  border-color: var(--vr-color);
-  background: var(--vr-glow);
-  color: var(--vr-color);
-}
-.owner-opt img { width: 16px; height: 16px; }
-
-.modal textarea {
-  width: 100%;
-  height: 70px;
-  background: var(--bg);
-  border: 1px solid var(--surface2);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.9rem;
-  padding: 10px;
-  resize: none;
-}
-.modal textarea:focus { outline: none; border-color: var(--text-dim); }
-.modal input[type="file"] {
-  width: 100%;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  margin-top: 4px;
-}
 
 .modal-actions {
   display: flex; gap: 8px; margin-top: 18px;
@@ -490,11 +637,6 @@ body {
 .modal-actions .save-btn {
   background: linear-gradient(135deg, var(--rp-color), var(--vr-color));
   color: #fff;
-}
-.modal-actions .delete-btn {
-  background: rgba(239,68,68,0.15);
-  color: #ef4444;
-  flex: 0.5;
 }
 
 /* ═══════════════════════════════

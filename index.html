@@ -55,13 +55,20 @@
   </div>
 
   <div class="stats-bar">
-    <div class="stat-card rp">
-      <div class="stat-label rp"><img src="images/icons/paw-blue.png" alt=""> RP</div>
-      <div class="stat-num" id="rpCount">0</div>
+    <div class="stat-pill rp">
+      <div class="stat-paw rp"><img src="images/icons/paw-blue.png" alt=""></div>
+      <div class="stat-info">
+        <div class="stat-name rp">RP</div>
+        <div class="stat-num" id="rpCount">0</div>
+      </div>
     </div>
-    <div class="stat-card vr">
-      <div class="stat-label vr"><img src="images/icons/paw-purple.png" alt=""> VR</div>
-      <div class="stat-num" id="vrCount">0</div>
+    <div class="stat-divider"></div>
+    <div class="stat-pill vr">
+      <div class="stat-paw vr"><img src="images/icons/paw-purple.png" alt=""></div>
+      <div class="stat-info">
+        <div class="stat-name vr">VR</div>
+        <div class="stat-num" id="vrCount">0</div>
+      </div>
     </div>
   </div>
 
@@ -89,20 +96,41 @@
 <div class="modal-overlay" id="editOverlay"></div>
 <div class="modal" id="editModal">
   <div class="modal-handle"></div>
-  <h3 id="editTitle">Edit Day</h3>
-  <label>Who has the boyz?</label>
-  <div class="owner-toggle">
-    <button class="owner-opt" id="optRP" data-owner="rp"><img src="images/icons/paw-blue.png"> RP</button>
-    <button class="owner-opt" id="optVR" data-owner="vr"><img src="images/icons/paw-purple.png"> VR</button>
+  
+  <div class="edit-header">
+    <div class="edit-date" id="editTitle">Feb 10, 2026</div>
+    <button class="edit-close" id="cancelBtn">✕</button>
   </div>
-  <label>Note</label>
-  <textarea id="noteInput" placeholder="Add a note..."></textarea>
-  <label>Photo</label>
-  <input type="file" id="photoInput" accept="image/*">
-  <div class="modal-actions">
-    <button class="delete-btn" id="deleteBtn">Delete</button>
-    <button class="cancel-btn" id="cancelBtn">Cancel</button>
-    <button class="save-btn" id="saveBtn">Save</button>
+
+  <div class="edit-section-label">Who has the boyz?</div>
+  <div class="owner-selector">
+    <div class="owner-card" id="optRP">
+      <div class="oc-paw rp"><img src="images/icons/paw-blue.png"></div>
+      <div class="oc-name">RP</div>
+      <div class="oc-check">✓</div>
+    </div>
+    <div class="owner-card" id="optVR">
+      <div class="oc-paw vr"><img src="images/icons/paw-purple.png"></div>
+      <div class="oc-name">VR</div>
+      <div class="oc-check">✓</div>
+    </div>
+  </div>
+
+  <div class="edit-section-label">Note</div>
+  <textarea class="edit-note" id="noteInput" placeholder="What happened today?"></textarea>
+
+  <div class="edit-section-label">Photo</div>
+  <div class="photo-upload-area" id="photoArea">
+    <div class="photo-upload-icon">📷</div>
+    <div class="photo-upload-text">Tap to <strong>add a photo</strong></div>
+    <div class="photo-preview" id="photoPreview"><img id="previewImg" src=""></div>
+    <input type="file" id="photoInput" accept="image/*">
+  </div>
+
+  <div class="edit-actions">
+    <button class="btn-delete" id="deleteBtn">🗑</button>
+    <button class="btn-cancel" id="cancelBtn2">Cancel</button>
+    <button class="btn-save" id="saveBtn">Save</button>
   </div>
 </div>
 
