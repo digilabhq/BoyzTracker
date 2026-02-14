@@ -11,13 +11,13 @@
   --surface: #141416;
   --surface2: rgba(255,255,255,0.06);
   --gold: #D4A853;
-  --gold-dim: rgba(212,168,83,0.35);
-  --gold-faint: rgba(212,168,83,0.12);
+  --gold-dim: rgba(212,168,83,0.7);
+  --gold-faint: rgba(212,168,83,0.7);
   --rp-color: #4ea8de;
   --vr-color: #c77dff;
   --text: rgba(255,255,255,0.7);
-  --text-dim: rgba(255,255,255,0.8);
-  --text-faint: rgba(255,255,255,0.30);
+  --text-dim: rgba(255,255,255,0.7);
+  --text-faint: rgba(255,255,255,0.1);
   --serif: 'Cormorant Garamond', serif;
   --sans: 'DM Sans', sans-serif;
   --safe-top: env(safe-area-inset-top, 0px);
