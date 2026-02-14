@@ -9,7 +9,7 @@
 :root {
   --bg: #0C0C0C;
   --surface: #141416;
-  --surface2: rgba(255,255,255,0.06);
+  --surface2: rgba(255,255,255,0.5);
   --gold: #D4A853;
   --gold-dim: rgba(212,168,83,0.7);
   --gold-faint: rgba(212,168,83,0.7);
@@ -240,7 +240,7 @@ body {
 .paw-scatter img {
   position: absolute;
   width: 9px; height: 9px;
-  opacity: 0.45;
+  opacity: 0.7;
 }
 
 /* Entry indicator — gold dot */
