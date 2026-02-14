@@ -5,15 +5,21 @@ import APP_CONFIG from './config.js';
 import DB from './db.js';
 import { toast } from './ui.js';
 
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 let selected = {};
 let pawPositions = {};
 let currentMonth = new Date();
 let currentUser = null;
 let currentEditKey = null;
 let lockTimers = {};
-let heroTimer = null;
-let thumbTimer = null;
-let heroIdx = 0;
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -23,21 +29,33 @@ const CAL = {
     currentUser = userId;
     currentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-    // Set rotating background (on refresh + every 4s while app is active)
-    const visitCount = parseInt(localStorage.getItem('boyz_visits') || '1') - 1;
-    heroIdx = visitCount % APP_CONFIG.heroImages.length;
+    // Set rotating background (shuffle once per visit + rotate every 4s while app is active)
+    // Use the shuffled order created on auth screen for this visit, or create one if missing.
+    let heroOrder = null;
+    const stored = sessionStorage.getItem('boyz_hero_shuffle');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        heroOrder = Array.isArray(parsed.heroes) ? parsed.heroes : null;
+      } catch (_) { heroOrder = null; }
+    }
+    if (!heroOrder || !heroOrder.length) {
+      heroOrder = shuffleArray(APP_CONFIG.heroImages);
+      sessionStorage.setItem('boyz_hero_shuffle', JSON.stringify({ visitId: Date.now(), heroes: heroOrder }));
+    }
 
+    let heroIdx = 0;
     const appBgEl = document.getElementById('appBg');
     const setHero = () => {
-      appBgEl.style.backgroundImage = `url('${APP_CONFIG.heroImages[heroIdx]}')`;
+      appBgEl.style.backgroundImage = `url('${heroOrder[heroIdx]}')`;
     };
     setHero();
 
-    if (heroTimer) clearInterval(heroTimer);
-    heroTimer = setInterval(() => {
-      heroIdx = (heroIdx + 1) % APP_CONFIG.heroImages.length;
+    if (this._heroTimer) clearInterval(this._heroTimer);
+    this._heroTimer = setInterval(() => {
+      heroIdx = (heroIdx + 1) % heroOrder.length;
       setHero();
-    }, 4000);
+    }, 6000);
 
     // Start listening
     DB.listen((sel, paw, status) => {
@@ -56,9 +74,9 @@ const CAL = {
     this.bindNav();
     this.bindEditor();
     this.bindViewers();
-    // Rotate day thumbnails while user stays in app
-    if (thumbTimer) clearInterval(thumbTimer);
-    thumbTimer = setInterval(() => {
+    // Rotate day thumbnails while user stays in app (4s)
+    if (this._thumbTimer) clearInterval(this._thumbTimer);
+    this._thumbTimer = setInterval(() => {
       const thumbs = document.querySelectorAll('img.day-thumb[data-key]');
       thumbs.forEach(img => {
         const key = img.dataset.key;
@@ -66,13 +84,12 @@ const CAL = {
         if (!entry) return;
         const photos = entry.photos || (entry.photo ? [entry.photo] : []);
         if (photos.length <= 1) return;
-
         const cur = parseInt(img.dataset.idx || '0', 10) || 0;
         const next = (cur + 1) % photos.length;
         img.dataset.idx = String(next);
         img.src = photos[next];
       });
-    }, 4000);
+    }, 6000);
 
     this.bindActions();
   },
@@ -140,14 +157,19 @@ const CAL = {
           thumb.className = 'day-thumb';
           thumb.dataset.key = key;
 
-          // Rotate on refresh by offsetting with current heroIdx + day number
-          const startIdx = photos.length > 1 ? ((heroIdx + d) % photos.length) : 0;
+          // Rotate on refresh by offsetting with visitId (from hero shuffle) + day number
+          let visitSalt = 0;
+          try {
+            const stored = sessionStorage.getItem('boyz_hero_shuffle');
+            if (stored) visitSalt = (JSON.parse(stored).visitId || 0) % 997;
+          } catch (_) {}
+          const startIdx = photos.length > 1 ? ((visitSalt + d) % photos.length) : 0;
+
           thumb.dataset.idx = String(startIdx);
           thumb.src = photos[startIdx];
-
           cell.appendChild(thumb);
         }
-}
+      }
 
       const num = document.createElement('div');
       num.className = 'day-num';
@@ -303,14 +325,12 @@ const CAL = {
         let nextPhotos = prevPhotos.slice();
 
         if (photoData) {
-          // Add new photo if it isn't already present
           if (!nextPhotos.includes(photoData)) nextPhotos.push(photoData);
         }
 
         selected[currentEditKey] = {
           owner,
           entries,
-          // Keep photo as the most-recent selection (for backward compatibility)
           photo: photoData || prev.photo || null,
           photos: nextPhotos.length ? nextPhotos : undefined,
           locked: false

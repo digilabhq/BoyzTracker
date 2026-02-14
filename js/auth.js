@@ -3,6 +3,15 @@
  */
 import APP_CONFIG from './config.js';
 
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 const AUTH = {
   currentUser: null,
   pinEntry: '',
@@ -10,30 +19,32 @@ const AUTH = {
   init(onSuccess) {
     this.onSuccess = onSuccess;
 
-    // Rotating hero background (on refresh + every 4s while auth is visible)
-    const visitCount = parseInt(localStorage.getItem('boyz_visits') || '0');
-    let heroIdx = visitCount % APP_CONFIG.heroImages.length;
-    localStorage.setItem('boyz_visits', String(visitCount + 1));
+    // Rotating hero background (shuffle once per visit + rotate every 4s while auth is visible)
+    const visitId = parseInt(localStorage.getItem('boyz_visits') || '0');
+    localStorage.setItem('boyz_visits', String(visitId + 1));
 
+    // Shuffle once for this visit and share with the main app
+    const shuffledHeroes = shuffleArray(APP_CONFIG.heroImages);
+    sessionStorage.setItem('boyz_hero_shuffle', JSON.stringify({ visitId, heroes: shuffledHeroes }));
+
+    let heroIdx = 0;
     const authBgEl = document.getElementById('authBg');
     const setHero = () => {
-      authBgEl.style.backgroundImage = `url('${APP_CONFIG.heroImages[heroIdx]}')`;
+      authBgEl.style.backgroundImage = `url('${shuffledHeroes[heroIdx]}')`;
     };
     setHero();
 
-    // Keep rotating if user stays on auth screen
     if (this._heroTimer) clearInterval(this._heroTimer);
     this._heroTimer = setInterval(() => {
-      // Stop if auth screen is no longer visible
       const authScreen = document.getElementById('authScreen');
       if (!authScreen || getComputedStyle(authScreen).display === 'none') {
         clearInterval(this._heroTimer);
         this._heroTimer = null;
         return;
       }
-      heroIdx = (heroIdx + 1) % APP_CONFIG.heroImages.length;
+      heroIdx = (heroIdx + 1) % shuffledHeroes.length;
       setHero();
-    }, 4000);
+    }, 6000);
 
     // Check session
     const saved = sessionStorage.getItem('boyz_user');
