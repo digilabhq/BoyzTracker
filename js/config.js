@@ -37,6 +37,10 @@ const APP_CONFIG = {
     "images/heroes/boyz-park.jpg",
     "images/heroes/benny-bed.jpg",
     "images/heroes/benny-yard.jpg",
+	"images/heroes/benny-couch.jpg",
+	"images/heroes/benny-baby.jpg",
+	"images/heroes/leo-baby.jpg",
+	"images/heroes/leo-glasses",
     "images/heroes/leo-couch.jpg"
   ],
 
