@@ -9,14 +9,14 @@
 :root {
   --bg: #0C0C0C;
   --surface: #141416;
-  --surface2: rgba(255,255,255,0.5);
+  --surface2: rgba(255,255,255,1);
   --gold: #D4A853;
   --gold-dim: rgba(212,168,83,1);
   --gold-faint: rgba(212,168,83,1);
   --rp-color: #4ea8de;
   --vr-color: #c77dff;
-  --text: rgba(255,255,255,0.85);
-  --text-dim: rgba(255,255,255,0.7);
+  --text: rgba(255,255,255,1);
+  --text-dim: rgba(255,255,255,1);
   --text-faint: rgba(255,255,255,0.1);
   --serif: 'Cormorant Garamond', serif;
   --sans: 'DM Sans', sans-serif;
