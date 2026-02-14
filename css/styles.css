@@ -16,8 +16,8 @@
   --rp-color: #4ea8de;
   --vr-color: #c77dff;
   --text: rgba(255,255,255,0.7);
-  --text-dim: rgba(255,255,255,0.4);
-  --text-faint: rgba(255,255,255,0.15);
+  --text-dim: rgba(255,255,255,0.8);
+  --text-faint: rgba(255,255,255,0.30);
   --serif: 'Cormorant Garamond', serif;
   --sans: 'DM Sans', sans-serif;
   --safe-top: env(safe-area-inset-top, 0px);
