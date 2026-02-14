@@ -1,25 +1,21 @@
 /*
- *  Auth Module — PIN-based login
+ *  Auth Module — PIN-based login with photo background
  */
 import APP_CONFIG from './config.js';
 
 const AUTH = {
   currentUser: null,
   pinEntry: '',
-  heroIndex: 0,
 
   init(onSuccess) {
     this.onSuccess = onSuccess;
 
-    // Rotating hero — pick based on session count
+    // Rotating hero background
     const visitCount = parseInt(localStorage.getItem('boyz_visits') || '0');
-    this.heroIndex = visitCount % APP_CONFIG.heroImages.length;
+    const heroIdx = visitCount % APP_CONFIG.heroImages.length;
     localStorage.setItem('boyz_visits', String(visitCount + 1));
-    document.getElementById('authHero').src = APP_CONFIG.heroImages[this.heroIndex];
-
-    // App name
-    document.getElementById('authTitle').textContent = APP_CONFIG.appName;
-    document.getElementById('authSubtitle').textContent = APP_CONFIG.tagline;
+    document.getElementById('authBg').style.backgroundImage =
+      `url('${APP_CONFIG.heroImages[heroIdx]}')`;
 
     // Check session
     const saved = sessionStorage.getItem('boyz_user');
@@ -29,7 +25,6 @@ const AUTH = {
       return;
     }
 
-    // Show auth screen
     document.getElementById('authScreen').style.display = 'flex';
     this.bindPad();
   },
@@ -60,7 +55,7 @@ const AUTH = {
       dots[i].classList.toggle('filled', i < this.pinEntry.length);
       dots[i].classList.remove('error');
     }
-    document.getElementById('authUserLabel').textContent = '';
+    document.getElementById('authStatus').textContent = '';
   },
 
   async validate() {
@@ -68,8 +63,8 @@ const AUTH = {
     if (userId) {
       this.currentUser = userId;
       const user = APP_CONFIG.users[userId];
-      document.getElementById('authUserLabel').textContent = `Welcome, ${user.name}`;
-      document.getElementById('authUserLabel').style.opacity = '1';
+      document.getElementById('authStatus').textContent = `Welcome, ${user.name}`;
+      document.getElementById('authStatus').classList.add('success');
       sessionStorage.setItem('boyz_user', userId);
 
       setTimeout(() => {

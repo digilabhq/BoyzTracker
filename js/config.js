@@ -40,41 +40,18 @@ const APP_CONFIG = {
     "images/heroes/leo-couch.jpg"
   ],
 
-  // ─── Dog Profiles ───
-  // Future: weight, meds, birthday, vet info
+  // ─── Dog Profiles (future) ───
   dogs: [
-    {
-      name: "Benny",
-      breed: "Dachshund",
-      photos: [
-        "images/heroes/benny-bed.jpg",
-        "images/heroes/benny-yard.jpg"
-      ]
-      // birthday: "2023-01-01",
-      // weight: { value: 12, unit: "lbs" },
-      // meds: [],
-      // vet: { name: "", phone: "", nextAppt: "" }
-    },
-    {
-      name: "Leo",
-      breed: "Goldendoodle",
-      photos: [
-        "images/heroes/leo-couch.jpg"
-      ]
-      // birthday: "2022-01-01",
-      // weight: { value: 55, unit: "lbs" },
-      // meds: [],
-      // vet: { name: "", phone: "", nextAppt: "" }
-    }
+    { name: "Benny", breed: "Dachshund" },
+    { name: "Leo", breed: "Goldendoodle" }
   ],
 
   // ─── Feature Flags ───
-  // Toggle future features on/off
   features: {
     calendar: true,
-    profiles: false,      // Dog profile pages
-    activityLog: false,   // Walks, vet, grooming log
-    expenses: false       // Expense tracking/splitting
+    profiles: false,
+    activityLog: false,
+    expenses: false
   },
 
   // ─── App Meta ───

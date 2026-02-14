@@ -49,19 +49,7 @@ const DB = {
       console.error('Sync error:', err);
       onChange(null, null, 'error');
     });
-  },
-
-  // ── Future: Activity Log ──
-  // async saveActivity(dogId, activity) { ... }
-  // async getActivities(dogId, range) { ... }
-
-  // ── Future: Expenses ──
-  // async saveExpense(expense) { ... }
-  // async getExpenses(range) { ... }
-
-  // ── Future: Dog Profiles ──
-  // async saveDogProfile(dogId, data) { ... }
-  // async getDogProfile(dogId) { ... }
+  }
 };
 
 export default DB;

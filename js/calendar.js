@@ -1,5 +1,5 @@
 /*
- *  Calendar Module — Rendering, interactions, stats
+ *  Calendar Module — Rendering, interactions, entries, report
  */
 import APP_CONFIG from './config.js';
 import DB from './db.js';
@@ -20,10 +20,11 @@ const CAL = {
     currentUser = userId;
     currentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-    // Set hero image (rotating)
+    // Set rotating background
     const visitCount = parseInt(localStorage.getItem('boyz_visits') || '1') - 1;
     const heroIdx = visitCount % APP_CONFIG.heroImages.length;
-    document.getElementById('heroImg').src = APP_CONFIG.heroImages[heroIdx];
+    document.getElementById('appBg').style.backgroundImage =
+      `url('${APP_CONFIG.heroImages[heroIdx]}')`;
 
     // Start listening
     DB.listen((sel, paw, status) => {
@@ -31,8 +32,10 @@ const CAL = {
         selected = sel;
         pawPositions = paw;
       }
+      document.getElementById('syncDot').style.background =
+        status === 'synced' ? '#4CAF50' : status === 'ready' ? '#D4A853' : '#ef4444';
       document.getElementById('syncLabel').textContent =
-        status === 'synced' ? 'Synced' : status === 'ready' ? 'Ready' : 'Offline';
+        status === 'synced' ? 'synced' : status === 'ready' ? 'ready' : 'offline';
       this.render();
     });
 
@@ -52,7 +55,7 @@ const CAL = {
     const today = new Date();
 
     document.getElementById('monthLabel').innerHTML =
-      `${MONTHS[m]} <span class="year">${y}</span>`;
+      `${MONTHS[m]} <span class="year-text">${y}</span>`;
 
     for (let i = 0; i < firstDay; i++) {
       const empty = document.createElement('div');
@@ -73,9 +76,10 @@ const CAL = {
 
       const entry = selected[key];
       if (entry) {
-        if (entry.owner === 'rp') { rpC++; cell.classList.add('rp-day'); }
-        else if (entry.owner === 'vr') { vrC++; cell.classList.add('vr-day'); }
+        if (entry.owner === 'rp') rpC++;
+        else if (entry.owner === 'vr') vrC++;
 
+        // Scattered paw prints
         if (!pawPositions[key]) pawPositions[key] = this.genPositions();
         const pawSrc = APP_CONFIG.users[entry.owner]?.paw || 'images/icons/paw-blue.png';
         const scatter = document.createElement('div');
@@ -90,16 +94,20 @@ const CAL = {
         });
         cell.appendChild(scatter);
 
+        // Entry indicator (gold dot)
+        const entries = entry.entries || [];
+        if (entries.length > 0 || entry.note) {
+          const dot = document.createElement('div');
+          dot.className = 'entry-dot';
+          cell.appendChild(dot);
+        }
+
+        // Photo thumbnail
         if (entry.photo) {
           const thumb = document.createElement('img');
           thumb.src = entry.photo;
           thumb.className = 'day-thumb';
           cell.appendChild(thumb);
-        } else if (entry.note) {
-          const pin = document.createElement('div');
-          pin.className = 'day-indicator';
-          pin.textContent = '📌';
-          cell.appendChild(pin);
         }
       }
 
@@ -131,22 +139,24 @@ const CAL = {
       if (entry?.locked) {
         if (entry.photo) {
           document.getElementById('viewerImg').src = entry.photo;
-          document.getElementById('viewerCaption').textContent = entry.note || '';
+          document.getElementById('viewerCaption').textContent =
+            (entry.entries || []).join(' · ') || entry.note || '';
           document.getElementById('photoViewer').classList.add('show');
-        } else if (entry.note) {
-          document.getElementById('viewerNote').textContent = entry.note;
+        } else if ((entry.entries && entry.entries.length) || entry.note) {
+          document.getElementById('viewerNote').textContent =
+            (entry.entries || []).join('\n') || entry.note;
           document.getElementById('noteViewer').classList.add('show');
         }
         return;
       }
 
       if (!selected[key]) {
-        selected[key] = { owner: currentUser, note:'', photo:null, locked:false };
+        selected[key] = { owner: currentUser, entries:[], photo:null, locked:false };
         if (!pawPositions[key]) pawPositions[key] = this.genPositions();
-      } else if (selected[key].owner === 'rp' && !selected[key].photo && !selected[key].note) {
+      } else if (selected[key].owner === 'rp' && !(selected[key].entries?.length) && !selected[key].photo && !selected[key].note) {
         selected[key].owner = 'vr';
         pawPositions[key] = this.genPositions();
-      } else if (selected[key].owner === 'vr' && !selected[key].photo && !selected[key].note) {
+      } else if (selected[key].owner === 'vr' && !(selected[key].entries?.length) && !selected[key].photo && !selected[key].note) {
         delete selected[key];
         delete pawPositions[key];
       } else {
@@ -165,31 +175,48 @@ const CAL = {
   // ─── Editor ───
   openEditor(key) {
     currentEditKey = key;
-    const entry = selected[key] || { owner: currentUser, note:'', photo:null };
+    const entry = selected[key] || { owner: currentUser, entries:[], photo:null };
 
     const [y,m,d] = key.split('-');
     document.getElementById('editTitle').textContent =
       `${MONTHS_SHORT[parseInt(m)-1]} ${parseInt(d)}, ${y}`;
 
     this.setOwnerToggle(entry.owner);
-    document.getElementById('noteInput').value = entry.note || '';
+
+    // Populate entries
+    const list = document.getElementById('entriesList');
+    list.innerHTML = '';
+    const entries = entry.entries || [];
+    // Migrate old note field if exists
+    if (!entries.length && entry.note) entries.push(entry.note);
+    entries.forEach((e, i) => this.addEntryRow(list, e, i));
+
+    // Reset photo
     document.getElementById('photoInput').value = '';
-    document.getElementById('photoPreview').style.display = 'none';
-    document.querySelector('.photo-upload-icon').style.display = 'block';
-    document.querySelector('.photo-upload-text').innerHTML = 'Tap to <strong>add a photo</strong>';
-    
-    // Show existing photo if any
+    document.getElementById('previewImg').style.display = 'none';
+    document.getElementById('photoUploadContent').style.display = 'flex';
     if (entry.photo) {
       document.getElementById('previewImg').src = entry.photo;
-      document.getElementById('photoPreview').style.display = 'block';
-      document.querySelector('.photo-upload-icon').style.display = 'none';
-      document.querySelector('.photo-upload-text').textContent = 'Tap to change';
+      document.getElementById('previewImg').style.display = 'block';
+      document.getElementById('photoUploadContent').style.display = 'none';
     }
-    
-    document.getElementById('deleteBtn').style.display = selected[key] ? 'flex' : 'none';
+
+    document.getElementById('deleteBtn').style.display = selected[key] ? 'inline' : 'none';
 
     document.getElementById('editOverlay').classList.add('show');
     setTimeout(() => document.getElementById('editModal').classList.add('show'), 10);
+  },
+
+  addEntryRow(list, text, idx) {
+    const row = document.createElement('div');
+    row.className = 'entry-row';
+    row.innerHTML = `
+      <input type="text" class="entry-input" value="${text || ''}" placeholder="What happened today?">
+      <span class="entry-remove">✕</span>
+    `;
+    row.querySelector('.entry-remove').onclick = () => row.remove();
+    list.appendChild(row);
+    if (!text) row.querySelector('.entry-input').focus();
   },
 
   closeEditor() {
@@ -198,13 +225,18 @@ const CAL = {
   },
 
   setOwnerToggle(owner) {
-    document.getElementById('optRP').className = 'owner-card' + (owner === 'rp' ? ' active-rp' : '');
-    document.getElementById('optVR').className = 'owner-card' + (owner === 'vr' ? ' active-vr' : '');
+    document.getElementById('optRP').className = 'owner-pill' + (owner === 'rp' ? ' active-rp' : '');
+    document.getElementById('optVR').className = 'owner-pill' + (owner === 'vr' ? ' active-vr' : '');
   },
 
   bindEditor() {
     document.getElementById('optRP').onclick = () => this.setOwnerToggle('rp');
     document.getElementById('optVR').onclick = () => this.setOwnerToggle('vr');
+
+    document.getElementById('addEntryBtn').onclick = () => {
+      const list = document.getElementById('entriesList');
+      this.addEntryRow(list, '', list.children.length);
+    };
 
     // Photo preview
     document.getElementById('photoInput').addEventListener('change', (e) => {
@@ -213,9 +245,8 @@ const CAL = {
         const reader = new FileReader();
         reader.onload = () => {
           document.getElementById('previewImg').src = reader.result;
-          document.getElementById('photoPreview').style.display = 'block';
-          document.querySelector('.photo-upload-icon').style.display = 'none';
-          document.querySelector('.photo-upload-text').textContent = 'Tap to change';
+          document.getElementById('previewImg').style.display = 'block';
+          document.getElementById('photoUploadContent').style.display = 'none';
         };
         reader.readAsDataURL(file);
       }
@@ -223,11 +254,18 @@ const CAL = {
 
     document.getElementById('saveBtn').onclick = () => {
       const owner = document.getElementById('optRP').classList.contains('active-rp') ? 'rp' : 'vr';
-      const note = document.getElementById('noteInput').value.trim();
+      const inputs = document.querySelectorAll('#entriesList .entry-input');
+      const entries = [];
+      inputs.forEach(inp => { if (inp.value.trim()) entries.push(inp.value.trim()); });
       const file = document.getElementById('photoInput').files[0];
 
       const finalize = (photoData) => {
-        selected[currentEditKey] = { owner, note, photo: photoData || null, locked: false };
+        selected[currentEditKey] = {
+          owner,
+          entries,
+          photo: photoData || null,
+          locked: false
+        };
         if (!pawPositions[currentEditKey]) pawPositions[currentEditKey] = this.genPositions();
         clearTimeout(lockTimers[currentEditKey]);
         lockTimers[currentEditKey] = setTimeout(() => {
@@ -271,7 +309,6 @@ const CAL = {
     };
 
     document.getElementById('cancelBtn').onclick = () => this.closeEditor();
-    document.getElementById('cancelBtn2').onclick = () => this.closeEditor();
     document.getElementById('editOverlay').onclick = () => this.closeEditor();
   },
 
@@ -303,12 +340,12 @@ const CAL = {
 
   // ─── Actions ───
   bindActions() {
-    document.getElementById('screenshotBtn').onclick = async () => {
+    document.getElementById('shareBtn').onclick = async () => {
       try {
         const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
         toast('Creating screenshot...');
-        const canvas = await html2canvas(document.getElementById('captureArea'), {
-          scale: 2, useCORS: true, backgroundColor: '#0f0f1a'
+        const canvas = await html2canvas(document.getElementById('app'), {
+          scale: 2, useCORS: true, backgroundColor: '#0C0C0C'
         });
         canvas.toBlob(blob => {
           const f = new File([blob], 'the_boyz.png', { type: 'image/png' });
@@ -324,15 +361,118 @@ const CAL = {
       } catch (err) { console.error(err); toast('Screenshot failed'); }
     };
 
+    document.getElementById('reportBtn').onclick = () => this.showReport();
+    document.getElementById('reportClose').onclick = () => this.closeReport();
+    document.getElementById('reportOverlay').onclick = () => this.closeReport();
+    document.getElementById('reportExport').onclick = () => this.exportReport();
+    document.getElementById('reportShare').onclick = () => this.shareReport();
+
     document.getElementById('yearBtn').onclick = () => this.showYearSummary();
     document.getElementById('yearClose').onclick = () => this.closeYearModal();
     document.getElementById('yearOverlay').onclick = () => this.closeYearModal();
     document.getElementById('yearExport').onclick = () => this.exportCSV();
 
-    document.getElementById('logoutBtn').onclick = () => {
+    document.getElementById('lockBtn').onclick = () => {
       sessionStorage.removeItem('boyz_user');
       location.reload();
     };
+  },
+
+  // ─── Monthly Report ───
+  showReport() {
+    const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
+    document.getElementById('reportTitle').textContent =
+      `${MONTHS[m]} ${y}`;
+
+    let rpC = 0, vrC = 0, entryCount = 0;
+    const timeline = document.getElementById('reportTimeline');
+    timeline.innerHTML = '';
+
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const entry = selected[key];
+      if (!entry) continue;
+
+      if (entry.owner === 'rp') rpC++;
+      else if (entry.owner === 'vr') vrC++;
+
+      const entries = entry.entries || [];
+      // Also check legacy note field
+      if (entry.note && !entries.length) entries.push(entry.note);
+      if (!entries.length) continue;
+
+      entryCount += entries.length;
+
+      const row = document.createElement('div');
+      row.className = 'report-row';
+      row.innerHTML = `
+        <div class="report-date">
+          <div class="report-day ${entry.owner}">${d}</div>
+          <div class="report-month">${MONTHS_SHORT[m]}</div>
+        </div>
+        <div class="report-line"></div>
+        <div class="report-entries">
+          ${entries.map(e => `<div class="report-entry">${e}</div>`).join('')}
+        </div>
+      `;
+      timeline.appendChild(row);
+    }
+
+    document.getElementById('reportRpCount').textContent = `${rpC} days`;
+    document.getElementById('reportVrCount').textContent = `${vrC} days`;
+    document.getElementById('reportEntryCount').textContent = `${entryCount} entries`;
+
+    document.getElementById('reportOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('reportModal').classList.add('show'), 10);
+  },
+
+  closeReport() {
+    document.getElementById('reportModal').classList.remove('show');
+    setTimeout(() => document.getElementById('reportOverlay').classList.remove('show'), 350);
+  },
+
+  exportReport() {
+    const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
+    let csv = 'Date,Owner,Entry\n';
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const entry = selected[key];
+      if (!entry) continue;
+      const entries = entry.entries || [];
+      if (entry.note && !entries.length) entries.push(entry.note);
+      entries.forEach(e => {
+        csv += `"${MONTHS_SHORT[m]} ${d} ${y}","${entry.owner.toUpperCase()}","${e}"\n`;
+      });
+    }
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `boyz_report_${MONTHS_SHORT[m].toLowerCase()}_${y}.csv`;
+    a.click();
+    toast('Exported');
+  },
+
+  async shareReport() {
+    try {
+      const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
+      toast('Creating report...');
+      const canvas = await html2canvas(document.getElementById('reportModal'), {
+        scale: 2, useCORS: true, backgroundColor: '#141416'
+      });
+      canvas.toBlob(blob => {
+        const f = new File([blob], 'boyz_report.png', { type: 'image/png' });
+        if (navigator.share && navigator.canShare?.({ files: [f] })) {
+          navigator.share({ files: [f], title: 'The Boyz Report' });
+        } else {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'boyz_report.png';
+          a.click();
+        }
+      });
+    } catch (err) { console.error(err); toast('Share failed'); }
   },
 
   // ─── Year Summary ───
@@ -344,9 +484,9 @@ const CAL = {
 
     let maxTotal = 1;
     const monthData = [];
-    for (let m = 0; m < 12; m++) {
+    for (let mo = 0; mo < 12; mo++) {
       let rp = 0, vr = 0;
-      const prefix = `${y}-${String(m+1).padStart(2,'0')}`;
+      const prefix = `${y}-${String(mo+1).padStart(2,'0')}`;
       for (const k in selected) {
         if (k.startsWith(prefix)) {
           if (selected[k].owner === 'rp') rp++;
@@ -358,10 +498,10 @@ const CAL = {
     }
 
     monthData.forEach((d, i) => {
-      const row = document.createElement('div');
-      row.className = 'year-row';
       const rpW = maxTotal > 0 ? (d.rp / maxTotal * 100) : 0;
       const vrW = maxTotal > 0 ? (d.vr / maxTotal * 100) : 0;
+      const row = document.createElement('div');
+      row.className = 'year-row';
       row.innerHTML = `
         <div class="year-row-label">${MONTHS_SHORT[i]}</div>
         <div class="year-bars">
@@ -410,10 +550,10 @@ const CAL = {
   },
 
   genPositions() {
-    const bases = [{top:22,left:28},{top:22,left:68},{top:62,left:28},{top:62,left:68}];
+    const bases = [{top:20,left:25},{top:20,left:65},{top:58,left:25},{top:58,left:65}];
     return bases.map(b => ({
-      top: Math.max(12, Math.min(78, b.top + (Math.random()*10-5))),
-      left: Math.max(12, Math.min(78, b.left + (Math.random()*10-5))),
+      top: Math.max(10, Math.min(75, b.top + (Math.random()*12-6))),
+      left: Math.max(10, Math.min(75, b.left + (Math.random()*12-6))),
       rot: Math.floor(Math.random()*50-25)
     }));
   }

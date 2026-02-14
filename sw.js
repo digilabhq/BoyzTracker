@@ -21,7 +21,6 @@ const ASSETS = [
   './images/icons/icon-512.png'
 ];
 
-// Install — cache core assets
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
@@ -29,7 +28,6 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// Activate — clean old caches
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -39,7 +37,6 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch — network first, cache fallback
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('firebaseio.com') ||

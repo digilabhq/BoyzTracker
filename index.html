@@ -6,131 +6,159 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#1a1a2e">
+<meta name="theme-color" content="#0C0C0C">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="images/icons/icon-192.png">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
 <!-- ─── AUTH SCREEN ─── -->
 <div id="authScreen" class="auth-screen">
-  <img id="authHero" src="" alt="The Boyz" class="auth-hero">
-  <div id="authTitle" class="auth-title"></div>
-  <div id="authSubtitle" class="auth-subtitle"></div>
-  <div class="pin-dots" id="pinDots">
-    <div class="pin-dot"></div>
-    <div class="pin-dot"></div>
-    <div class="pin-dot"></div>
-    <div class="pin-dot"></div>
+  <div id="authBg" class="auth-bg"></div>
+  <div class="auth-vignette"></div>
+  <div class="auth-content">
+    <div class="auth-title">The Boyz</div>
+    <div class="auth-subtitle">Leo & Benny</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad" id="pinPad">
+      <div class="pin-key" data-val="1">1</div>
+      <div class="pin-key" data-val="2">2</div>
+      <div class="pin-key" data-val="3">3</div>
+      <div class="pin-key" data-val="4">4</div>
+      <div class="pin-key" data-val="5">5</div>
+      <div class="pin-key" data-val="6">6</div>
+      <div class="pin-key" data-val="7">7</div>
+      <div class="pin-key" data-val="8">8</div>
+      <div class="pin-key" data-val="9">9</div>
+      <div class="pin-key empty"></div>
+      <div class="pin-key" data-val="0">0</div>
+      <div class="pin-key back" data-val="back">&#9003;</div>
+    </div>
+    <div id="authStatus" class="auth-status">Enter PIN</div>
   </div>
-  <div class="pin-pad" id="pinPad">
-    <div class="pin-key" data-val="1">1</div>
-    <div class="pin-key" data-val="2">2</div>
-    <div class="pin-key" data-val="3">3</div>
-    <div class="pin-key" data-val="4">4</div>
-    <div class="pin-key" data-val="5">5</div>
-    <div class="pin-key" data-val="6">6</div>
-    <div class="pin-key" data-val="7">7</div>
-    <div class="pin-key" data-val="8">8</div>
-    <div class="pin-key" data-val="9">9</div>
-    <div class="pin-key empty"></div>
-    <div class="pin-key" data-val="0">0</div>
-    <div class="pin-key back" data-val="back">&#9003;</div>
-  </div>
-  <div id="authUserLabel" class="auth-user-label"></div>
-  <div id="authError" class="auth-error-msg"></div>
 </div>
 
 <!-- ─── MAIN APP ─── -->
 <div id="app" class="app">
-  <div class="app-header" id="captureArea">
-    <img id="heroImg" src="" alt="The Boyz" class="hero-img">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <div class="hero-title">The Boyz</div>
-      <div class="hero-badge"><div class="dot"></div><span id="syncLabel">Connecting...</span></div>
-    </div>
-  </div>
+  <div id="appBg" class="app-bg"></div>
+  <div class="app-vignette"></div>
+  <div class="app-content">
 
-  <div class="stats-bar">
-    <div class="stat-pill rp">
-      <div class="stat-paw rp"><img src="images/icons/paw-blue.png" alt=""></div>
-      <div class="stat-info">
-        <div class="stat-name rp">RP</div>
-        <div class="stat-num" id="rpCount">0</div>
+    <div class="sync-badge">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">connecting</span>
+    </div>
+
+    <div class="app-header">
+      <div class="app-title">The Boyz</div>
+      <div class="app-tagline">Leo & Benny</div>
+    </div>
+
+    <div class="gold-rule"></div>
+
+    <div class="stats-bar">
+      <div class="stat-group">
+        <div class="stat-num rp" id="rpCount">0</div>
+        <div class="stat-paw"><img src="images/icons/paw-blue.png" alt=""></div>
+      </div>
+      <span class="stat-diamond">◆</span>
+      <div class="stat-group">
+        <div class="stat-paw"><img src="images/icons/paw-purple.png" alt=""></div>
+        <div class="stat-num vr" id="vrCount">0</div>
       </div>
     </div>
-    <div class="stat-divider"></div>
-    <div class="stat-pill vr">
-      <div class="stat-paw vr"><img src="images/icons/paw-purple.png" alt=""></div>
-      <div class="stat-info">
-        <div class="stat-name vr">VR</div>
-        <div class="stat-num" id="vrCount">0</div>
-      </div>
+
+    <div class="month-nav">
+      <button class="month-arrow" id="prevMonth">‹</button>
+      <span class="month-label" id="monthLabel"></span>
+      <button class="month-arrow" id="nextMonth">›</button>
     </div>
-  </div>
 
-  <div class="month-nav">
-    <button class="month-btn" id="prevMonth">&#8249;</button>
-    <div class="month-label" id="monthLabel"></div>
-    <button class="month-btn" id="nextMonth">&#8250;</button>
-  </div>
+    <div class="weekday-row">
+      <div class="weekday-name">S</div><div class="weekday-name">M</div><div class="weekday-name">T</div>
+      <div class="weekday-name">W</div><div class="weekday-name">T</div><div class="weekday-name">F</div><div class="weekday-name">S</div>
+    </div>
 
-  <div class="weekday-row">
-    <div class="weekday-name">Sun</div><div class="weekday-name">Mon</div><div class="weekday-name">Tue</div>
-    <div class="weekday-name">Wed</div><div class="weekday-name">Thu</div><div class="weekday-name">Fri</div><div class="weekday-name">Sat</div>
-  </div>
+    <div class="cal-grid" id="calGrid"></div>
 
-  <div class="cal-grid" id="calGrid"></div>
+    <div class="bottom-actions">
+      <button class="action-link" id="shareBtn">Share</button>
+      <button class="action-link" id="reportBtn">Report</button>
+      <button class="action-link" id="yearBtn">Year</button>
+      <button class="action-link" id="lockBtn">Lock</button>
+    </div>
 
-  <div class="bottom-actions">
-    <button class="action-btn" id="screenshotBtn">📸 Share</button>
-    <button class="action-btn" id="yearBtn">📊 Year</button>
-    <button class="action-btn" id="logoutBtn">🔒</button>
   </div>
 </div>
 
-<!-- ─── EDIT MODAL ─── -->
+<!-- ─── EDITOR MODAL (Compact) ─── -->
 <div class="modal-overlay" id="editOverlay"></div>
 <div class="modal" id="editModal">
   <div class="modal-handle"></div>
-  
+
   <div class="edit-header">
-    <div class="edit-date" id="editTitle">Feb 10, 2026</div>
-    <button class="edit-close" id="cancelBtn">✕</button>
-  </div>
-
-  <div class="edit-section-label">Who has the boyz?</div>
-  <div class="owner-selector">
-    <div class="owner-card" id="optRP">
-      <div class="oc-paw rp"><img src="images/icons/paw-blue.png"></div>
-      <div class="oc-name">RP</div>
-      <div class="oc-check">✓</div>
-    </div>
-    <div class="owner-card" id="optVR">
-      <div class="oc-paw vr"><img src="images/icons/paw-purple.png"></div>
-      <div class="oc-name">VR</div>
-      <div class="oc-check">✓</div>
+    <div class="edit-date" id="editTitle"></div>
+    <div class="edit-pills">
+      <button class="owner-pill" id="optRP">
+        <img src="images/icons/paw-blue.png"> <span>RP</span>
+      </button>
+      <button class="owner-pill" id="optVR">
+        <img src="images/icons/paw-purple.png"> <span>VR</span>
+      </button>
     </div>
   </div>
 
-  <div class="edit-section-label">Note</div>
-  <textarea class="edit-note" id="noteInput" placeholder="What happened today?"></textarea>
+  <div class="edit-gold-rule"></div>
 
-  <div class="edit-section-label">Photo</div>
-  <div class="photo-upload-area" id="photoArea">
-    <div class="photo-upload-icon">📷</div>
-    <div class="photo-upload-text">Tap to <strong>add a photo</strong></div>
-    <div class="photo-preview" id="photoPreview"><img id="previewImg" src=""></div>
-    <input type="file" id="photoInput" accept="image/*">
+  <div class="section-label">What happened today?</div>
+  <div id="entriesList"></div>
+  <button class="add-entry-btn" id="addEntryBtn">+ Add entry</button>
+
+  <div class="photo-upload" id="photoArea">
+    <div class="photo-upload-box" id="photoUploadContent">
+      📷
+      <input type="file" id="photoInput" accept="image/*">
+    </div>
+    <img class="photo-preview" id="previewImg">
+    <span class="photo-upload-label">Add photo</span>
   </div>
 
   <div class="edit-actions">
-    <button class="btn-delete" id="deleteBtn">🗑</button>
-    <button class="btn-cancel" id="cancelBtn2">Cancel</button>
-    <button class="btn-save" id="saveBtn">Save</button>
+    <div class="edit-actions-left">
+      <button class="edit-action-text delete" id="deleteBtn">Delete</button>
+    </div>
+    <div class="edit-actions-right">
+      <button class="edit-action-text cancel" id="cancelBtn">Cancel</button>
+      <button class="edit-action-text save" id="saveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── REPORT MODAL (Timeline) ─── -->
+<div class="modal-overlay" id="reportOverlay"></div>
+<div class="modal" id="reportModal">
+  <div class="modal-handle"></div>
+  <div class="report-header" id="reportTitle"></div>
+  <div class="report-subtitle">Monthly Report</div>
+
+  <div class="report-stats">
+    <div class="report-stat rp"><img src="images/icons/paw-blue.png" alt=""> <span id="reportRpCount"></span></div>
+    <div class="report-stat vr"><img src="images/icons/paw-purple.png" alt=""> <span id="reportVrCount"></span></div>
+    <div class="report-stat entries"><span id="reportEntryCount"></span></div>
+  </div>
+
+  <div id="reportTimeline"></div>
+
+  <div class="report-actions">
+    <button class="report-action" id="reportShare">Share</button>
+    <button class="report-action" id="reportExport">Export</button>
+    <button class="report-action close" id="reportClose">Close</button>
   </div>
 </div>
 
@@ -138,11 +166,11 @@
 <div class="modal-overlay" id="yearOverlay"></div>
 <div class="modal" id="yearModal">
   <div class="modal-handle"></div>
-  <h3 id="yearTitle">Summary</h3>
+  <div class="year-title" id="yearTitle"></div>
   <div class="year-chart" id="yearChart"></div>
-  <div class="modal-actions" style="margin-top:16px">
-    <button class="cancel-btn" id="yearClose" style="flex:1">Close</button>
-    <button class="save-btn" id="yearExport" style="flex:1">Export CSV</button>
+  <div class="year-actions">
+    <button class="report-action" id="yearExport">Export</button>
+    <button class="report-action close" id="yearClose">Close</button>
   </div>
 </div>
 
@@ -162,7 +190,6 @@
 <!-- ─── TOAST ─── -->
 <div class="toast" id="toast"></div>
 
-<!-- ─── APP ENTRY POINT ─── -->
 <script type="module" src="js/app.js"></script>
 
 </body>
