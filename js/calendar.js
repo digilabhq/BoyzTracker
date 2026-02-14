@@ -11,6 +11,9 @@ let currentMonth = new Date();
 let currentUser = null;
 let currentEditKey = null;
 let lockTimers = {};
+let heroTimer = null;
+let thumbTimer = null;
+let heroIdx = 0;
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -20,11 +23,21 @@ const CAL = {
     currentUser = userId;
     currentMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
-    // Set rotating background
+    // Set rotating background (on refresh + every 4s while app is active)
     const visitCount = parseInt(localStorage.getItem('boyz_visits') || '1') - 1;
-    const heroIdx = visitCount % APP_CONFIG.heroImages.length;
-    document.getElementById('appBg').style.backgroundImage =
-      `url('${APP_CONFIG.heroImages[heroIdx]}')`;
+    heroIdx = visitCount % APP_CONFIG.heroImages.length;
+
+    const appBgEl = document.getElementById('appBg');
+    const setHero = () => {
+      appBgEl.style.backgroundImage = `url('${APP_CONFIG.heroImages[heroIdx]}')`;
+    };
+    setHero();
+
+    if (heroTimer) clearInterval(heroTimer);
+    heroTimer = setInterval(() => {
+      heroIdx = (heroIdx + 1) % APP_CONFIG.heroImages.length;
+      setHero();
+    }, 4000);
 
     // Start listening
     DB.listen((sel, paw, status) => {
@@ -43,6 +56,24 @@ const CAL = {
     this.bindNav();
     this.bindEditor();
     this.bindViewers();
+    // Rotate day thumbnails while user stays in app
+    if (thumbTimer) clearInterval(thumbTimer);
+    thumbTimer = setInterval(() => {
+      const thumbs = document.querySelectorAll('img.day-thumb[data-key]');
+      thumbs.forEach(img => {
+        const key = img.dataset.key;
+        const entry = selected[key];
+        if (!entry) return;
+        const photos = entry.photos || (entry.photo ? [entry.photo] : []);
+        if (photos.length <= 1) return;
+
+        const cur = parseInt(img.dataset.idx || '0', 10) || 0;
+        const next = (cur + 1) % photos.length;
+        img.dataset.idx = String(next);
+        img.src = photos[next];
+      });
+    }, 4000);
+
     this.bindActions();
   },
 
@@ -102,14 +133,21 @@ const CAL = {
           cell.appendChild(dot);
         }
 
-        // Photo thumbnail
-        if (entry.photo) {
+        // Photo thumbnail (rotates on refresh + every 4s if multiple photos exist)
+        const photos = entry.photos || (entry.photo ? [entry.photo] : []);
+        if (photos.length) {
           const thumb = document.createElement('img');
-          thumb.src = entry.photo;
           thumb.className = 'day-thumb';
+          thumb.dataset.key = key;
+
+          // Rotate on refresh by offsetting with current heroIdx + day number
+          const startIdx = photos.length > 1 ? ((heroIdx + d) % photos.length) : 0;
+          thumb.dataset.idx = String(startIdx);
+          thumb.src = photos[startIdx];
+
           cell.appendChild(thumb);
         }
-      }
+}
 
       const num = document.createElement('div');
       num.className = 'day-num';
@@ -260,10 +298,21 @@ const CAL = {
       const file = document.getElementById('photoInput').files[0];
 
       const finalize = (photoData) => {
+        const prev = selected[currentEditKey] || {};
+        const prevPhotos = prev.photos || (prev.photo ? [prev.photo] : []);
+        let nextPhotos = prevPhotos.slice();
+
+        if (photoData) {
+          // Add new photo if it isn't already present
+          if (!nextPhotos.includes(photoData)) nextPhotos.push(photoData);
+        }
+
         selected[currentEditKey] = {
           owner,
           entries,
-          photo: photoData || null,
+          // Keep photo as the most-recent selection (for backward compatibility)
+          photo: photoData || prev.photo || null,
+          photos: nextPhotos.length ? nextPhotos : undefined,
           locked: false
         };
         if (!pawPositions[currentEditKey]) pawPositions[currentEditKey] = this.genPositions();

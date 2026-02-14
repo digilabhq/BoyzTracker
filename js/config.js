@@ -35,13 +35,28 @@ const APP_CONFIG = {
   heroImages: [
     "images/heroes/boyz-deck.png",
     "images/heroes/boyz-park.jpg",
+	"images/heroes/boyz-looking.jpg",
+	"images/heroes/boyz-golf.jpg",
     "images/heroes/benny-bed.jpg",
     "images/heroes/benny-yard.jpg",
 	"images/heroes/benny-couch.jpg",
 	"images/heroes/benny-baby.jpg",
+	"images/heroes/benny-sun.jpg",
+	"images/heroes/benny-posing.jpg",
+	"images/heroes/benny-leafs.jpg",
+	"images/heroes/benny-head.jpg",
+	"images/heroes/benny-eyes.jpg",
 	"images/heroes/leo-baby.jpg",
 	"images/heroes/leo-glasses",
-    "images/heroes/leo-couch.jpg"
+	"images/heroes/leo-teacher",
+	"images/heroes/leo-sun",
+	"images/heroes/leo-leaf",
+	"images/heroes/leo-hat",
+	"images/heroes/leo-fast",
+	"images/heroes/leo-cigar",
+	"images/heroes/leo-birthday",
+	"images/heroes/leo-afro",
+	"images/heroes/leo-couch.jpg"
   ],
 
   // ─── Dog Profiles (future) ───

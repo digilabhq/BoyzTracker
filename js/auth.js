@@ -10,17 +10,36 @@ const AUTH = {
   init(onSuccess) {
     this.onSuccess = onSuccess;
 
-    // Rotating hero background
+    // Rotating hero background (on refresh + every 4s while auth is visible)
     const visitCount = parseInt(localStorage.getItem('boyz_visits') || '0');
-    const heroIdx = visitCount % APP_CONFIG.heroImages.length;
+    let heroIdx = visitCount % APP_CONFIG.heroImages.length;
     localStorage.setItem('boyz_visits', String(visitCount + 1));
-    document.getElementById('authBg').style.backgroundImage =
-      `url('${APP_CONFIG.heroImages[heroIdx]}')`;
+
+    const authBgEl = document.getElementById('authBg');
+    const setHero = () => {
+      authBgEl.style.backgroundImage = `url('${APP_CONFIG.heroImages[heroIdx]}')`;
+    };
+    setHero();
+
+    // Keep rotating if user stays on auth screen
+    if (this._heroTimer) clearInterval(this._heroTimer);
+    this._heroTimer = setInterval(() => {
+      // Stop if auth screen is no longer visible
+      const authScreen = document.getElementById('authScreen');
+      if (!authScreen || getComputedStyle(authScreen).display === 'none') {
+        clearInterval(this._heroTimer);
+        this._heroTimer = null;
+        return;
+      }
+      heroIdx = (heroIdx + 1) % APP_CONFIG.heroImages.length;
+      setHero();
+    }, 4000);
 
     // Check session
     const saved = sessionStorage.getItem('boyz_user');
     if (saved && APP_CONFIG.users[saved]) {
       this.currentUser = saved;
+      if (this._heroTimer) { clearInterval(this._heroTimer); this._heroTimer = null; }
       this.onSuccess(saved);
       return;
     }
@@ -71,6 +90,7 @@ const AUTH = {
         document.getElementById('authScreen').classList.add('leaving');
         setTimeout(() => {
           document.getElementById('authScreen').style.display = 'none';
+          if (this._heroTimer) { clearInterval(this._heroTimer); this._heroTimer = null; }
           this.onSuccess(userId);
         }, 500);
       }, 600);
