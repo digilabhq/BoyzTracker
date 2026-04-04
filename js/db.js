@@ -7,6 +7,11 @@ let db = null;
 let auth = null;
 let unsubscribe = null;
 
+// Firestore rejects `undefined` values — replace them with null recursively
+function sanitize(obj) {
+  return JSON.parse(JSON.stringify(obj, (_, v) => (v === undefined ? null : v)));
+}
+
 const DB = {
   async init() {
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js');
@@ -25,7 +30,7 @@ const DB = {
     const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js');
     try {
       const ref = doc(db, 'shared', 'calendar');
-      await setDoc(ref, { selected, pawPositions });
+      await setDoc(ref, { selected: sanitize(selected), pawPositions: sanitize(pawPositions) });
       return true;
     } catch (err) {
       console.error('Save error:', err);

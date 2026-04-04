@@ -44,7 +44,7 @@ const AUTH = {
       }
       heroIdx = (heroIdx + 1) % shuffledHeroes.length;
       setHero();
-    }, 6000);
+    }, 10000);
 
     // Check session
     const saved = sessionStorage.getItem('boyz_user');
