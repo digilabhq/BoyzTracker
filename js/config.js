@@ -60,9 +60,10 @@ const APP_CONFIG = {
   ],
 
   // ─── Dog Profiles (future) ───
+  // birthday: "YYYY-MM-DD" — ⚠️ PLACEHOLDERS, set the real dates!
   dogs: [
-    { name: "Benny", breed: "Dachshund" },
-    { name: "Leo", breed: "Goldendoodle" }
+    { name: "Benny", breed: "Dachshund",   birthday: "2020-01-01" },
+    { name: "Leo",   breed: "Goldendoodle", birthday: "2021-01-01" }
   ],
 
   // ─── Feature Flags ───
@@ -74,7 +75,7 @@ const APP_CONFIG = {
   },
 
   // ─── App Meta ───
-  version: "2.0.0",
+  version: "2.3.0",
   appName: "The Boyz",
   tagline: "Leo & Benny"
 };

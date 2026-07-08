@@ -1,4 +1,4 @@
-const CACHE_NAME = 'boyz-tracker-v2.2.0';
+const CACHE_NAME = 'boyz-tracker-v2.3.0';
 
 // Precache the app shell ONLY. cache.addAll is atomic — one missing hero
 // image would block the entire SW install. Heroes get cached at runtime

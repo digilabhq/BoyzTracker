@@ -260,7 +260,9 @@ body {
   background: rgba(255,255,255,0.035);
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   border-radius: 6px; cursor: pointer;
-  transition: all 0.15s; overflow: hidden;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.15s, box-shadow 0.15s;
+  overflow: hidden;
   -webkit-user-select: none; user-select: none;
 }
 .cal-day.empty { pointer-events: none; }
@@ -276,7 +278,61 @@ body {
 .cal-day.today .day-num {
   color: var(--gold); font-weight: 700;
 }
-.cal-day:active { transform: scale(0.9); }
+.cal-day:active { transform: scale(0.88); transition-duration: 0.08s; }
+
+/* Paw stamp — scatter pops in like a stamp hitting paper */
+.paw-scatter.stamp { animation: pawStamp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes pawStamp {
+  0%   { transform: scale(1.7); opacity: 0; }
+  55%  { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* Birthday markers */
+.cal-day.birthday::before {
+  content: '✦';
+  position: absolute; top: 2px; left: 4px;
+  font-size: 0.5rem; color: var(--gold);
+  z-index: 3; opacity: 0.9;
+}
+.cal-day.birthday-today {
+  box-shadow: inset 0 0 0 1px rgba(212,168,83,0.8), 0 0 14px rgba(212,168,83,0.35);
+  background: rgba(212,168,83,0.14);
+  animation: bdayGlow 2.4s ease-in-out infinite;
+}
+@keyframes bdayGlow {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(212,168,83,0.8), 0 0 10px rgba(212,168,83,0.25); }
+  50%      { box-shadow: inset 0 0 0 1px rgba(212,168,83,1),   0 0 18px rgba(212,168,83,0.5); }
+}
+
+/* Month slide transitions */
+.cal-grid.slide-in-left  { animation: slideInLeft 0.26s ease-out; }
+.cal-grid.slide-in-right { animation: slideInRight 0.26s ease-out; }
+@keyframes slideInLeft {
+  from { transform: translateX(-26px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideInRight {
+  from { transform: translateX(26px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+/* Confetti */
+.confetti-layer {
+  position: fixed; inset: 0; z-index: 900;
+  pointer-events: none; overflow: hidden;
+}
+.confetti-piece {
+  position: absolute; top: -3vh;
+  width: 7px; height: 11px;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  from { transform: translateY(0) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  to   { transform: translateY(110vh) rotate(660deg); opacity: 0; }
+}
 
 /* Scattered paws */
 .paw-scatter {
@@ -366,9 +422,12 @@ body {
   padding: 6px 14px; border-radius: 20px;
   border: 1px solid var(--surface2);
   display: flex; align-items: center; gap: 5px;
-  cursor: pointer; transition: all 0.2s;
+  cursor: pointer;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.2s, border-color 0.2s;
   background: none; font-family: var(--sans);
 }
+.owner-pill:active { transform: scale(0.92); transition-duration: 0.08s; }
 .owner-pill img { width: 12px; height: 12px; }
 .owner-pill span { font-size: 0.7rem; font-weight: 600; color: var(--text-dim); }
 .owner-pill.active-rp {

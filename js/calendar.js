@@ -10,6 +10,31 @@ function esc(s) {
     ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
 
+// ─── Birthday helpers (computed from config, recurs yearly) ───
+function birthdaysOn(y, m, d) {
+  return (APP_CONFIG.dogs || []).filter(dog => {
+    if (!dog.birthday) return false;
+    const [, bm, bd] = dog.birthday.split('-').map(Number);
+    return bm === m + 1 && bd === d;
+  });
+}
+
+function nextBirthdayInfo(today) {
+  let best = null;
+  for (const dog of APP_CONFIG.dogs || []) {
+    if (!dog.birthday) continue;
+    const [by, bm, bd] = dog.birthday.split('-').map(Number);
+    let next = new Date(today.getFullYear(), bm - 1, bd);
+    const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (next < t0) next = new Date(today.getFullYear() + 1, bm - 1, bd);
+    const days = Math.round((next - t0) / 86400000);
+    const age = next.getFullYear() - by;
+    if (!best || days < best.days) best = { dog, days, age };
+    else if (days === best.days) best.also = dog; // shared birthday
+  }
+  return best;
+}
+
 function shuffleArray(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -73,6 +98,8 @@ const CAL = {
     this.bindViewers();
     this.bindGallery();
     this.bindActions();
+    this.updateTagline();
+    this.maybeCelebrate();
   },
 
   render() {
@@ -98,9 +125,14 @@ const CAL = {
       const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const cell = document.createElement('div');
       cell.className = 'cal-day';
+      cell.dataset.key = key;
 
-      if (today.getFullYear()===y && today.getMonth()===m && today.getDate()===d) {
-        cell.classList.add('today');
+      const isToday = today.getFullYear()===y && today.getMonth()===m && today.getDate()===d;
+      if (isToday) cell.classList.add('today');
+
+      if (birthdaysOn(y, m, d).length) {
+        cell.classList.add('birthday');
+        if (isToday) cell.classList.add('birthday-today');
       }
 
       const entry = selected[key];
@@ -221,6 +253,7 @@ const CAL = {
         if (selected[key]) { selected[key].locked = true; this.saveDay(key); }
       }, 5000);
       this.render(); // optimistic — don't wait for the snapshot echo
+      this.stampPaws(key);
       this.saveDay(key);
     });
   },
@@ -428,15 +461,97 @@ const CAL = {
   },
 
   // ─── Nav ───
+  changeMonth(dir) {
+    currentMonth.setMonth(currentMonth.getMonth() + dir);
+    this.render();
+    const grid = document.getElementById('calGrid');
+    const cls = dir > 0 ? 'slide-in-right' : 'slide-in-left';
+    grid.classList.remove('slide-in-left', 'slide-in-right');
+    void grid.offsetWidth; // restart animation
+    grid.classList.add(cls);
+    grid.addEventListener('animationend',
+      () => grid.classList.remove(cls), { once: true });
+  },
+
   bindNav() {
-    document.getElementById('prevMonth').onclick = () => {
-      currentMonth.setMonth(currentMonth.getMonth() - 1);
-      this.render();
-    };
-    document.getElementById('nextMonth').onclick = () => {
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
-      this.render();
-    };
+    document.getElementById('prevMonth').onclick = () => this.changeMonth(-1);
+    document.getElementById('nextMonth').onclick = () => this.changeMonth(1);
+
+    // Swipe left/right on the grid to change months.
+    const grid = document.getElementById('calGrid');
+    let sx = 0, sy = 0, swiped = false;
+
+    grid.addEventListener('touchstart', e => {
+      const t = e.changedTouches?.[0]; if (!t) return;
+      sx = t.clientX; sy = t.clientY; swiped = false;
+    }, { passive: true });
+
+    grid.addEventListener('touchend', e => {
+      const t = e.changedTouches?.[0]; if (!t) return;
+      const dx = t.clientX - sx, dy = t.clientY - sy;
+      if (Math.abs(dx) > 60 && Math.abs(dy) < 40) {
+        swiped = true;
+        this.changeMonth(dx < 0 ? 1 : -1);
+      }
+    }, { passive: true });
+
+    // A swipe's touchend can spawn a click on the cell under the finger —
+    // swallow it in the capture phase so it never toggles a day.
+    grid.addEventListener('click', e => {
+      if (swiped) { swiped = false; e.stopPropagation(); e.preventDefault(); }
+    }, true);
+  },
+
+  // ─── Paw stamp micro-interaction ───
+  stampPaws(key) {
+    const scatter = document.querySelector(`.cal-day[data-key="${key}"] .paw-scatter`);
+    if (!scatter) return;
+    scatter.classList.add('stamp');
+    scatter.addEventListener('animationend',
+      () => scatter.classList.remove('stamp'), { once: true });
+  },
+
+  // ─── Birthdays: tagline countdown + celebration ───
+  updateTagline() {
+    const el = document.querySelector('.app-tagline');
+    if (!el) return;
+    const info = nextBirthdayInfo(new Date());
+    if (!info || info.days > 7) { el.textContent = APP_CONFIG.tagline; return; }
+    const names = info.also ? `${info.dog.name} & ${info.also.name}` : info.dog.name;
+    if (info.days === 0) {
+      el.textContent = `Happy Birthday, ${names}!`;
+    } else {
+      const turn = info.also ? 'have birthdays' : `turns ${info.age}`;
+      el.textContent = `${names} ${turn} in ${info.days} day${info.days === 1 ? '' : 's'}`;
+    }
+  },
+
+  maybeCelebrate() {
+    const today = new Date();
+    const bdays = birthdaysOn(today.getFullYear(), today.getMonth(), today.getDate());
+    if (!bdays.length) return;
+    const flag = `boyz_bday_${today.getFullYear()}-${today.getMonth()+1}-${today.getDate()}`;
+    if (sessionStorage.getItem(flag)) return;
+    sessionStorage.setItem(flag, '1');
+    this.confetti();
+  },
+
+  confetti() {
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    const colors = ['#D4A853', '#AB8900', '#F5F0E6', '#4EA8DE', '#C77DFF'];
+    for (let i = 0; i < 44; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.background = colors[i % colors.length];
+      p.style.animationDuration = (2 + Math.random() * 1.6) + 's';
+      p.style.animationDelay = (Math.random() * 0.8) + 's';
+      p.style.transform = `rotate(${Math.random() * 360}deg)`;
+      layer.appendChild(p);
+    }
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 4600);
   },
 
   // ─── Actions ───
