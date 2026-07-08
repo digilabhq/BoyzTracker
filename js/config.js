@@ -60,10 +60,10 @@ const APP_CONFIG = {
   ],
 
   // ─── Dog Profiles (future) ───
-  // birthday: "YYYY-MM-DD" — ⚠️ PLACEHOLDERS, set the real dates!
+  // birthday: "YYYY-MM-DD"
   dogs: [
-    { name: "Benny", breed: "Dachshund",   birthday: "2020-01-01" },
-    { name: "Leo",   breed: "Goldendoodle", birthday: "2021-01-01" }
+    { name: "Benny", breed: "Dachshund",    birthday: "2020-10-06" },
+    { name: "Leo",   breed: "Goldendoodle", birthday: "2018-09-03" }
   ],
 
   // ─── Feature Flags ───
