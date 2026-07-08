@@ -15,7 +15,8 @@
 
 <!-- ─── AUTH SCREEN ─── -->
 <div id="authScreen" class="auth-screen">
-  <div id="authBg" class="auth-bg"></div>
+  <div id="authBgA" class="auth-bg-layer"></div>
+  <div id="authBgB" class="auth-bg-layer"></div>
   <div class="auth-vignette"></div>
   <div class="auth-content">
     <div class="auth-title">The Boyz</div>
@@ -46,33 +47,38 @@
 
 <!-- ─── MAIN APP ─── -->
 <div id="app" class="app">
-  <div id="appBg" class="app-bg"></div>
-  <div class="app-vignette"></div>
-  <div class="app-content">
+
+  <!-- Editorial masthead — one framed photo per visit, tap for gallery -->
+  <div class="masthead" id="masthead">
+    <div class="masthead-photo" id="mastheadPhoto"></div>
+    <div class="masthead-gradient"></div>
 
     <div class="sync-badge">
       <div class="sync-dot" id="syncDot"></div>
       <span id="syncLabel">connecting</span>
     </div>
 
-    <div class="app-header">
+    <div class="masthead-content">
       <div class="app-title">The Boyz</div>
       <div class="app-tagline">Leo & Benny</div>
+      <div class="stats-bar">
+        <div class="stat-group">
+          <div class="stat-num rp" id="rpCount">0</div>
+          <div class="stat-paw"><img src="images/icons/paw-blue.png" alt=""></div>
+        </div>
+        <span class="stat-diamond">◆</span>
+        <div class="stat-group">
+          <div class="stat-paw"><img src="images/icons/paw-purple.png" alt=""></div>
+          <div class="stat-num vr" id="vrCount">0</div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Quiet surface for the calendar -->
+  <div class="app-body">
 
     <div class="gold-rule"></div>
-
-    <div class="stats-bar">
-      <div class="stat-group">
-        <div class="stat-num rp" id="rpCount">0</div>
-        <div class="stat-paw"><img src="images/icons/paw-blue.png" alt=""></div>
-      </div>
-      <span class="stat-diamond">◆</span>
-      <div class="stat-group">
-        <div class="stat-paw"><img src="images/icons/paw-purple.png" alt=""></div>
-        <div class="stat-num vr" id="vrCount">0</div>
-      </div>
-    </div>
 
     <div class="month-nav">
       <button class="month-arrow" id="prevMonth">‹</button>
@@ -95,6 +101,13 @@
     </div>
 
   </div>
+</div>
+
+<!-- ─── HERO GALLERY (tap masthead) ─── -->
+<div class="gallery-viewer" id="galleryViewer">
+  <div class="gallery-track" id="galleryTrack"></div>
+  <div class="gallery-count" id="galleryCount"></div>
+  <button class="close-viewer" id="closeGallery">Close</button>
 </div>
 
 <!-- ─── EDITOR MODAL (Compact) ─── -->

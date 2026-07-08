@@ -27,12 +27,31 @@ const AUTH = {
     const shuffledHeroes = shuffleArray(APP_CONFIG.heroImages);
     sessionStorage.setItem('boyz_hero_shuffle', JSON.stringify({ visitId, heroes: shuffledHeroes }));
 
+    // Two stacked layers: preload next photo, then crossfade + Ken Burns.
     let heroIdx = 0;
-    const authBgEl = document.getElementById('authBg');
-    const setHero = () => {
-      authBgEl.style.backgroundImage = `url('${shuffledHeroes[heroIdx]}')`;
+    let activeLayer = 0;
+    const layers = [
+      document.getElementById('authBgA'),
+      document.getElementById('authBgB')
+    ];
+
+    const showHero = (idx) => {
+      const url = shuffledHeroes[idx];
+      const img = new Image();
+      img.onload = () => {
+        const next = layers[1 - activeLayer];
+        const cur = layers[activeLayer];
+        next.style.backgroundImage = `url('${url}')`;
+        // restart the Ken Burns animation on the incoming layer
+        next.classList.remove('visible');
+        void next.offsetWidth;
+        next.classList.add('visible');
+        cur.classList.remove('visible');
+        activeLayer = 1 - activeLayer;
+      };
+      img.src = url;
     };
-    setHero();
+    showHero(0);
 
     if (this._heroTimer) clearInterval(this._heroTimer);
     this._heroTimer = setInterval(() => {
@@ -43,7 +62,7 @@ const AUTH = {
         return;
       }
       heroIdx = (heroIdx + 1) % shuffledHeroes.length;
-      setHero();
+      showHero(heroIdx);
     }, 10000);
 
     // Check session

@@ -5,6 +5,11 @@ import APP_CONFIG from './config.js';
 import DB from './db.js';
 import { toast } from './ui.js';
 
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
 function shuffleArray(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -44,18 +49,10 @@ const CAL = {
       sessionStorage.setItem('boyz_hero_shuffle', JSON.stringify({ visitId: Date.now(), heroes: heroOrder }));
     }
 
-    let heroIdx = 0;
-    const appBgEl = document.getElementById('appBg');
-    const setHero = () => {
-      appBgEl.style.backgroundImage = `url('${heroOrder[heroIdx]}')`;
-    };
-    setHero();
-
-    if (this._heroTimer) clearInterval(this._heroTimer);
-    this._heroTimer = setInterval(() => {
-      heroIdx = (heroIdx + 1) % heroOrder.length;
-      setHero();
-    }, 6000);
+    // One framed masthead photo per visit — still, not a slideshow.
+    this._heroOrder = heroOrder;
+    document.getElementById('mastheadPhoto').style.backgroundImage =
+      `url('${heroOrder[0]}')`;
 
     // Start listening
     DB.listen((sel, paw, status) => {
@@ -74,23 +71,7 @@ const CAL = {
     this.bindNav();
     this.bindEditor();
     this.bindViewers();
-    // Rotate day thumbnails while user stays in app (4s)
-    if (this._thumbTimer) clearInterval(this._thumbTimer);
-    this._thumbTimer = setInterval(() => {
-      const thumbs = document.querySelectorAll('img.day-thumb[data-key]');
-      thumbs.forEach(img => {
-        const key = img.dataset.key;
-        const entry = selected[key];
-        if (!entry) return;
-        const photos = entry.photos || (entry.photo ? [entry.photo] : []);
-        if (photos.length <= 1) return;
-        const cur = parseInt(img.dataset.idx || '0', 10) || 0;
-        const next = (cur + 1) % photos.length;
-        img.dataset.idx = String(next);
-        img.src = photos[next];
-      });
-    }, 6000);
-
+    this.bindGallery();
     this.bindActions();
   },
 
@@ -150,7 +131,7 @@ const CAL = {
           cell.appendChild(dot);
         }
 
-        // Photo thumbnail (rotates on refresh + every 4s if multiple photos exist)
+        // Photo thumbnail (varies per visit if multiple photos exist)
         const photos = entry.photos || (entry.photo ? [entry.photo] : []);
         if (photos.length) {
           const thumb = document.createElement('img');
@@ -176,7 +157,7 @@ const CAL = {
       num.textContent = d;
       cell.appendChild(num);
 
-      this.bindDay(cell, key, entry);
+      this.bindDay(cell, key);
       grid.appendChild(cell);
     }
 
@@ -184,9 +165,13 @@ const CAL = {
     document.getElementById('vrCount').textContent = vrC;
   },
 
-  bindDay(cell, key, entry) {
+  bindDay(cell, key) {
     let pressTimer;
-    const startPress = () => { pressTimer = setTimeout(() => this.openEditor(key), 500); };
+    let longPressFired = false;
+    const startPress = () => {
+      longPressFired = false;
+      pressTimer = setTimeout(() => { longPressFired = true; this.openEditor(key); }, 500);
+    };
     const endPress = () => clearTimeout(pressTimer);
 
     cell.addEventListener('touchstart', startPress, {passive:true});
@@ -194,11 +179,20 @@ const CAL = {
     cell.addEventListener('touchmove', endPress);
     cell.addEventListener('mousedown', startPress);
     cell.addEventListener('mouseup', endPress);
+    cell.addEventListener('mouseleave', endPress);
 
     cell.addEventListener('click', () => {
+      // Long-press already opened the editor — swallow the trailing click.
+      if (longPressFired) { longPressFired = false; return; }
+
+      const entry = selected[key]; // always read live state
+
       if (entry?.locked) {
-        if (entry.photo) {
-          document.getElementById('viewerImg').src = entry.photo;
+        const photos = entry.photos || (entry.photo ? [entry.photo] : []);
+        if (photos.length) {
+          // Show whichever photo the day thumbnail is currently displaying.
+          const thumb = document.querySelector(`img.day-thumb[data-key="${key}"]`);
+          document.getElementById('viewerImg').src = thumb?.src || photos[0];
           document.getElementById('viewerCaption').textContent =
             (entry.entries || []).join(' · ') || entry.note || '';
           document.getElementById('photoViewer').classList.add('show');
@@ -210,15 +204,13 @@ const CAL = {
         return;
       }
 
-      if (!selected[key]) {
+      if (!entry) {
         selected[key] = { owner: currentUser, entries:[], photo:null, locked:false };
         if (!pawPositions[key]) pawPositions[key] = this.genPositions();
-      } else if (selected[key].owner === 'rp' && !(selected[key].entries?.length) && !selected[key].photo && !selected[key].note) {
-        selected[key].owner = 'vr';
+      } else if (!(entry.entries?.length) && !entry.photo && !entry.note) {
+        // Toggle owner rp ↔ vr — deletion happens only via the editor.
+        entry.owner = entry.owner === 'rp' ? 'vr' : 'rp';
         pawPositions[key] = this.genPositions();
-      } else if (selected[key].owner === 'vr' && !(selected[key].entries?.length) && !selected[key].photo && !selected[key].note) {
-        delete selected[key];
-        delete pawPositions[key];
       } else {
         this.openEditor(key);
         return;
@@ -226,9 +218,10 @@ const CAL = {
 
       clearTimeout(lockTimers[key]);
       lockTimers[key] = setTimeout(() => {
-        if (selected[key]) { selected[key].locked = true; this.save(); }
+        if (selected[key]) { selected[key].locked = true; this.saveDay(key); }
       }, 5000);
-      this.save();
+      this.render(); // optimistic — don't wait for the snapshot echo
+      this.saveDay(key);
     });
   },
 
@@ -246,7 +239,7 @@ const CAL = {
     // Populate entries
     const list = document.getElementById('entriesList');
     list.innerHTML = '';
-    const entries = entry.entries || [];
+    const entries = [...(entry.entries || [])]; // copy — never mutate live data
     // Migrate old note field if exists
     if (!entries.length && entry.note) entries.push(entry.note);
     entries.forEach((e, i) => this.addEntryRow(list, e, i));
@@ -271,9 +264,10 @@ const CAL = {
     const row = document.createElement('div');
     row.className = 'entry-row';
     row.innerHTML = `
-      <input type="text" class="entry-input" value="${text || ''}" placeholder="What happened today?">
+      <input type="text" class="entry-input" placeholder="What happened today?">
       <span class="entry-remove">✕</span>
     `;
+    row.querySelector('.entry-input').value = text || ''; // property, not attribute — quotes are safe
     row.querySelector('.entry-remove').onclick = () => row.remove();
     list.appendChild(row);
     if (!text) row.querySelector('.entry-input').focus();
@@ -337,10 +331,12 @@ const CAL = {
         };
         if (!pawPositions[currentEditKey]) pawPositions[currentEditKey] = this.genPositions();
         clearTimeout(lockTimers[currentEditKey]);
-        lockTimers[currentEditKey] = setTimeout(() => {
-          if (selected[currentEditKey]) { selected[currentEditKey].locked = true; this.save(); }
+        const savedKey = currentEditKey;
+        lockTimers[savedKey] = setTimeout(() => {
+          if (selected[savedKey]) { selected[savedKey].locked = true; this.saveDay(savedKey); }
         }, 5000);
-        this.save();
+        this.render();
+        this.saveDay(savedKey);
         this.closeEditor();
         toast('Saved');
       };
@@ -369,9 +365,11 @@ const CAL = {
 
     document.getElementById('deleteBtn').onclick = () => {
       if (currentEditKey && selected[currentEditKey]) {
+        clearTimeout(lockTimers[currentEditKey]);
         delete selected[currentEditKey];
         delete pawPositions[currentEditKey];
-        this.save();
+        this.render();
+        this.removeDay(currentEditKey);
         this.closeEditor();
         toast('Deleted');
       }
@@ -393,6 +391,40 @@ const CAL = {
     document.getElementById('noteViewer').onclick = e => {
       if (e.target.id === 'noteViewer') document.getElementById('noteViewer').classList.remove('show');
     };
+  },
+
+  // ─── Hero Gallery (tap masthead) ───
+  bindGallery() {
+    const viewer = document.getElementById('galleryViewer');
+    const track = document.getElementById('galleryTrack');
+    const count = document.getElementById('galleryCount');
+
+    document.getElementById('masthead').addEventListener('click', () => {
+      const heroes = this._heroOrder || APP_CONFIG.heroImages;
+      track.innerHTML = '';
+      heroes.forEach(src => {
+        const slide = document.createElement('div');
+        slide.className = 'gallery-slide';
+        const img = document.createElement('img');
+        img.loading = 'lazy';
+        img.src = src;
+        slide.appendChild(img);
+        track.appendChild(slide);
+      });
+      count.textContent = `1 / ${heroes.length}`;
+      track.scrollLeft = 0;
+      viewer.classList.add('show');
+    });
+
+    track.addEventListener('scroll', () => {
+      const total = track.children.length;
+      if (!total) return;
+      const idx = Math.round(track.scrollLeft / track.clientWidth);
+      count.textContent = `${Math.min(idx + 1, total)} / ${total}`;
+    }, { passive: true });
+
+    document.getElementById('closeGallery').onclick = () =>
+      viewer.classList.remove('show');
   },
 
   // ─── Nav ───
@@ -466,7 +498,7 @@ const CAL = {
       if (entry.owner === 'rp') rpC++;
       else if (entry.owner === 'vr') vrC++;
 
-      const entries = entry.entries || [];
+      const entries = [...(entry.entries || [])]; // copy — never mutate live data
       // Also check legacy note field
       if (entry.note && !entries.length) entries.push(entry.note);
       if (!entries.length) continue;
@@ -482,7 +514,7 @@ const CAL = {
         </div>
         <div class="report-line"></div>
         <div class="report-entries">
-          ${entries.map(e => `<div class="report-entry">${e}</div>`).join('')}
+          ${entries.map(e => `<div class="report-entry">${esc(e)}</div>`).join('')}
         </div>
       `;
       timeline.appendChild(row);
@@ -509,10 +541,10 @@ const CAL = {
       const key = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const entry = selected[key];
       if (!entry) continue;
-      const entries = entry.entries || [];
+      const entries = [...(entry.entries || [])];
       if (entry.note && !entries.length) entries.push(entry.note);
       entries.forEach(e => {
-        csv += `"${MONTHS_SHORT[m]} ${d} ${y}","${entry.owner.toUpperCase()}","${e}"\n`;
+        csv += `"${MONTHS_SHORT[m]} ${d} ${y}","${entry.owner.toUpperCase()}","${String(e).replace(/"/g, '""')}"\n`;
       });
     }
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -613,9 +645,15 @@ const CAL = {
   },
 
   // ─── Utilities ───
-  async save() {
-    const ok = await DB.save(selected, pawPositions);
+  async saveDay(key) {
+    if (!selected[key]) return;
+    const ok = await DB.saveDay(key, selected[key], pawPositions[key] || null);
     if (!ok) toast('Save failed');
+  },
+
+  async removeDay(key) {
+    const ok = await DB.deleteDay(key);
+    if (!ok) toast('Delete failed');
   },
 
   genPositions() {

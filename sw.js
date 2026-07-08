@@ -1,4 +1,8 @@
-const CACHE_NAME = 'boyz-tracker-v2.0.0';
+const CACHE_NAME = 'boyz-tracker-v2.2.0';
+
+// Precache the app shell ONLY. cache.addAll is atomic — one missing hero
+// image would block the entire SW install. Heroes get cached at runtime
+// by the fetch handler below.
 const ASSETS = [
   './',
   './index.html',
@@ -10,11 +14,6 @@ const ASSETS = [
   './js/db.js',
   './js/calendar.js',
   './js/ui.js',
-  './images/heroes/boyz-deck.png',
-  './images/heroes/boyz-park.jpg',
-  './images/heroes/benny-bed.jpg',
-  './images/heroes/benny-yard.jpg',
-  './images/heroes/leo-couch.jpg',
   './images/icons/paw-blue.png',
   './images/icons/paw-purple.png',
   './images/icons/icon-192.png',
